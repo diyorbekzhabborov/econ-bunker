@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ЭКОНОМИЧЕСКИЙ БУНКЕР // Образовательный Мультиплеер-Терминал</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <!-- Фоновая сетка и световые акценты тактического терминала -->
+  <div class="bg-grid"></div>
+  <div class="bg-glow bg-glow-gold"></div>
+  <div class="bg-glow bg-glow-emerald"></div>
+
+  <!-- ВЕРХНЯЯ ПАНЕЛЬ (HUD HEADER) -->
+  <header class="hud-header">
+    <div class="brand-block">
+      <div class="brand-emblem">
+        <span class="pulse-dot"></span>
+        <span class="emblem-code">ECON//BUNKER</span>
+      </div>
+      <div class="brand-titles">
+        <h1>ЭКОНОМИЧЕСКИЙ БУНКЕР</h1>
+        <p>Интерактивный симулятор для уроков экономики</p>
+      </div>
+    </div>
+
+    <!-- Статус комнаты (показывается, когда игрок внутри комнаты) -->
+    <div id="hudRoomBar" class="hud-room-bar hidden">
+      <div class="hud-pill room-code-pill" id="copyRoomLinkBtn" title="Нажмите, чтобы скопировать ссылку для друзей">
+        <span class="pill-label">КОД КОМНАТЫ:</span>
+        <strong id="hudRoomCode" class="mono-digits">----</strong>
+        <span class="copy-badge">Копировать</span>
+      </div>
+
+      <div class="hud-pill">
+        <span class="pill-label">РАУНД:</span>
+        <strong id="hudRound" class="mono-digits">1</strong>
+      </div>
+
+      <div class="hud-pill">
+        <span class="pill-label">МЕСТ В БУНКЕРЕ:</span>
+        <strong id="hudSlots" class="mono-digits text-emerald">0 / 0</strong>
+      </div>
+
+      <button id="editMyNameBtn" class="btn btn-ghost btn-sm" title="Изменить своё имя в игре">
+        ✎ Имя: <span id="hudMyName">Игрок</span>
+      </button>
+
+      <button id="leaveRoomBtn" class="btn btn-danger-outline btn-sm">
+        Выйти
+      </button>
+    </div>
+  </header>
+
+  <main class="main-container">
+    <!-- ЭКРАН 1: ВХОД И СОЗДАНИЕ КОМНАТЫ -->
+    <section id="welcomeScreen" class="screen active">
+      <div class="hero-layout">
+        <div class="hero-info-card">
+          <div class="sys-tag">ПРОТОКОЛ ЦЕНТРАЛЬНОГО БАНКА // УЧЕБНЫЙ МОДУЛЬ</div>
+          <h2 class="hero-title">Выживет только сбалансированная экономика</h2>
+          <p class="hero-subtitle">
+            Мировая финансовая система рухнула. Перед вами — автономный бункер с ограниченными ресурсами.
+            Каждый участник получает уникальный пакет карточек по <strong>количеству игроков в комнате</strong>:
+            профессию, стартовый капитал, экономический навык, фактор риска и инсайдерское действие.
+          </p>
+
+          <div class="feature-badges">
+            <div class="f-badge">
+              <span class="f-icon">📱</span>
+              <div>
+                <strong>Игра с телефонов и ПК</strong>
+                <span>Вход по 4-значному коду комнаты в реальном времени</span>
+              </div>
+            </div>
+            <div class="f-badge">
+              <span class="f-icon">🃏</span>
+              <div>
+                <strong>Умная раздача по числу игроков</strong>
+                <span>Уникальная колода без повторов для каждого участника</span>
+              </div>
+            </div>
+            <div class="f-badge">
+              <span class="f-icon">📊</span>
+              <div>
+                <strong>Экономические понятия на каждой карте</strong>
+                <span>Инфляция, ликвидность, альтернативные издержки, теория игр</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="quick-demo-box">
+            <div>
+              <strong>Хотите сразу посмотреть карточки или провести демо на проекторе?</strong>
+              <p>Создайте комнату и нажмите «Добавить AI-кандидатов» в лобби — карточки распределятся мгновенно!</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="auth-terminal-card">
+          <div class="terminal-header">
+            <span class="terminal-dot red"></span>
+            <span class="terminal-dot amber"></span>
+            <span class="terminal-dot green"></span>
+            <span class="terminal-title">TERMINAL // АВТОРИЗАЦИЯ УЧАСТНИКА</span>
+          </div>
+
+          <div class="terminal-body">
+            <div class="form-group">
+              <label for="playerNameInput">ВАШЕ ИМЯ ИЛИ ПОЗЫВНОЙ НА УРОКЕ</label>
+              <input
+                type="text"
+                id="playerNameInput"
+                class="input-field"
+                placeholder="Например: Артем (Аудитор) или Команда 1"
+                maxlength="28"
+              />
+              <span class="field-hint">Вы сможете изменить имя в любой момент даже во время игры</span>
+            </div>
+
+            <div class="auth-tabs">
+              <button id="tabJoinBtn" class="auth-tab active">Войти по коду комнаты</button>
+              <button id="tabCreateBtn" class="auth-tab">Создать комнату (Ведущий)</button>
+            </div>
+
+            <!-- Панель входа по коду -->
+            <div id="joinPanel" class="auth-panel active">
+              <div class="form-group">
+                <label for="roomCodeInput">4-ЗНАЧНЫЙ КОД КОМНАТЫ</label>
+                <input
+                  type="text"
+                  id="roomCodeInput"
+                  class="input-field code-input-large"
+                  placeholder="0000"
+                  maxlength="4"
+                  inputmode="numeric"
+                />
+              </div>
+              <button id="joinRoomSubmitBtn" class="btn btn-primary btn-block btn-lg">
+                Подключиться к Бункеру →
+              </button>
+            </div>
+
+            <!-- Панель создания новой комнаты -->
+            <div id="createPanel" class="auth-panel">
+              <div class="form-group">
+                <label for="customSlotsInput">КВОТА МЕСТ В БУНКЕРЕ (НЕОБЯЗАТЕЛЬНО)</label>
+                <select id="customSlotsInput" class="input-field">
+                  <option value="">Автоматически (50% от числа участников)</option>
+                  <option value="2">Ровно 2 места в бункере</option>
+                  <option value="3">Ровно 3 места в бункере</option>
+                  <option value="4">Ровно 4 места в бункере</option>
+                  <option value="5">Ровно 5 мест в бункере</option>
+                  <option value="6">Ровно 6 мест в бункере</option>
+                </select>
+              </div>
+              <button id="createRoomSubmitBtn" class="btn btn-gold btn-block btn-lg">
+                Открыть новую комнату (Сервер Урока) →
+              </button>
+            </div>
+
+            <div id="authErrorBox" class="alert-error hidden"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ЭКРАН 2: ЛОББИ ОЖИДАНИЯ УЧАСТНИКОВ -->
+    <section id="lobbyScreen" class="screen">
+      <div class="lobby-grid">
+        <!-- Левая колонка: Код подключения и список игроков -->
+        <div class="panel-card">
+          <div class="panel-header">
+            <div>
+              <span class="sys-tag">ФАЗА 0 // РЕГИСТРАЦИЯ КАНДИДАТОВ</span>
+              <h2>Лобби Экономического Бункера</h2>
+            </div>
+            <div class="player-counter-badge">
+              Участников: <strong id="lobbyPlayerCount" class="mono-digits">1</strong>
+            </div>
+          </div>
+
+          <div class="invite-banner">
+            <div class="invite-code-block">
+              <span class="invite-label">КОД ДЛЯ ВХОДА С ТЕЛЕФОНОВ:</span>
+              <div class="invite-code-digits" id="lobbyRoomCodeDisplay">0000</div>
+              <p class="invite-url-hint" id="serverAddressesHint">Загрузка сетевого адреса...</p>
+            </div>
+            <div class="invite-actions">
+              <button id="copyInviteBtn" class="btn btn-outline">
+                📋 Скопировать прямую ссылку
+              </button>
+              <button id="addBotsBtn" class="btn btn-ghost host-only">
+                🤖 + Добавить AI-кандидатов (для теста/класса)
+              </button>
+            </div>
+          </div>
+
+          <div class="lobby-players-section">
+            <div class="section-subhead">
+              <span>ЗАРЕГИСТРИРОВАННЫЕ УЧАСТНИКИ (КАРТОЧКИ РАЗДАДУТСЯ ПО ЧИСЛУ ИГРОКОВ)</span>
+            </div>
+            <div id="lobbyPlayersList" class="lobby-players-grid"></div>
+          </div>
+
+          <div id="lobbyHostControls" class="lobby-footer-controls host-only">
+            <div class="slots-adjuster">
+              <label for="lobbySlotsSelect">Мест в бункере после отбора:</label>
+              <select id="lobbySlotsSelect" class="input-field input-sm">
+                <option value="1">1 место</option>
+                <option value="2">2 места</option>
+                <option value="3">3 места</option>
+                <option value="4">4 места</option>
+                <option value="5">5 мест</option>
+                <option value="6">6 мест</option>
+                <option value="7">7 мест</option>
+                <option value="8">8 мест</option>
+              </select>
+            </div>
+            <button id="startGameBtn" class="btn btn-gold btn-lg">
+              🚀 Раздать карточки и начать игру
+            </button>
+          </div>
+
+          <div id="lobbyGuestNotice" class="guest-wait-notice">
+            <span class="pulse-dot"></span>
+            Ожидание организатора комнаты... Как только ведущий нажмет «Начать игру», вы получите свои 5 экономических карточек.
+          </div>
+        </div>
+
+        <!-- Правая колонка: Превью сценария катастрофы -->
+        <div class="panel-card crisis-preview-panel">
+          <div class="panel-header">
+            <div>
+              <span class="sys-tag text-amber">МАКРОЭКОНОМИЧЕСКИЙ СЦЕНАРИЙ</span>
+              <h3 id="lobbyCrisisTitle">Загрузка сценария...</h3>
+            </div>
+            <button id="changeCrisisBtn" class="btn btn-outline btn-sm host-only">
+              🎲 Сменить кризис
+            </button>
+          </div>
+
+          <div class="crisis-code-bar mono-digits" id="lobbyCrisisCode">CRISIS // 000</div>
+          <p id="lobbyCrisisDesc" class="crisis-desc"></p>
+
+          <div class="macro-metrics-grid" id="lobbyMacroGrid"></div>
+
+          <div class="bunker-specs-box">
+            <h4 id="lobbyBunkerName">Бункер</h4>
+            <p class="bunker-duration" id="lobbyBunkerDuration"></p>
+            <ul id="lobbyBunkerResources" class="bunker-resource-list"></ul>
+            <div class="bunker-objective-box" id="lobbyBunkerObjective"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ЭКРАН 3: ИГРОВОЙ ТЕРМИНАЛ (ОСНОВНАЯ ИГРА) -->
+    <section id="gameScreen" class="screen">
+      <!-- Верхняя сводка: Сценарий раунда + макроэкономические индикаторы бункера -->
+      <div class="game-top-bar">
+        <div class="round-event-banner">
+          <div class="event-header-row">
+            <span class="event-badge" id="gameRoundBadge">РАУНД 1</span>
+            <span class="crisis-mini-tag" id="gameCrisisMiniTag">КРИЗИС</span>
+          </div>
+          <h2 id="gameRoundTitle">Первичная презентация человеческого капитала</h2>
+          <p id="gameRoundDesc"></p>
+          <div class="lesson-discussion-box">
+            <strong>💡 Экономический вопрос для обсуждения в классе:</strong>
+            <span id="gameDiscussionPrompt"></span>
+          </div>
+        </div>
+
+        <!-- Панель индексов устойчивости бункера -->
+        <div class="bunker-analytics-card">
+          <div class="analytics-title-row">
+            <span class="sys-tag">ИНДЕКСЫ ВЫЖИВАЕМОСТИ БУНКЕРА</span>
+            <span id="transparencyBadge" class="mono-digits">Раскрыто: 0%</span>
+          </div>
+
+          <div class="metric-bars">
+            <div class="metric-row">
+              <div class="metric-label">
+                <span>Производственный потенциал</span>
+                <strong id="metricProdVal" class="mono-digits">50%</strong>
+              </div>
+              <div class="progress-track"><div id="metricProdBar" class="progress-fill fill-emerald"></div></div>
+            </div>
+
+            <div class="metric-row">
+              <div class="metric-label">
+                <span>Финансовая устойчивость</span>
+                <strong id="metricFinVal" class="mono-digits">50%</strong>
+              </div>
+              <div class="progress-track"><div id="metricFinBar" class="progress-fill fill-gold"></div></div>
+            </div>
+
+            <div class="metric-row">
+              <div class="metric-label">
+                <span>Ресурсная безопасность</span>
+                <strong id="metricResVal" class="mono-digits">50%</strong>
+              </div>
+              <div class="progress-track"><div id="metricResBar" class="progress-fill fill-cyan"></div></div>
+            </div>
+          </div>
+
+          <!-- Панель управления раундами для Ведущего / Учителя -->
+          <div id="hostActionToolbar" class="host-action-toolbar host-only">
+            <button id="startVotingBtn" class="btn btn-gold btn-sm">
+              🗳 Начать голосование
+            </button>
+            <button id="finishVotingBtn" class="btn btn-primary btn-sm hidden">
+              ✅ Завершить голосование и подвести итог
+            </button>
+            <button id="nextRoundNoVoteBtn" class="btn btn-outline btn-sm">
+              ⏭ След. раунд
+            </button>
+            <button id="revealBotsBtn" class="btn btn-ghost btn-sm" title="Открыть по 1 карте у AI-ботов">
+              🤖 Вскрыть карту AI
+            </button>
+            <button id="restartGameBtn" class="btn btn-danger-outline btn-sm">
+              ↺ В лобби
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Баннер голосования (показывается, когда идет голосование) -->
+      <div id="votingAlertBanner" class="voting-alert-banner hidden">
+        <div class="voting-alert-content">
+          <span class="voting-icon">⚖️</span>
+          <div>
+            <h3>ЗАСЕДАНИЕ ЭКОНОМИЧЕСКОГО СОВЕТА: ИДЕТ ГОЛОСОВАНИЕ</h3>
+            <p>Выберите кандидата в таблице участников ниже и нажмите «Голосовать против», если считаете его экономический профиль наименее полезным для выживания бункера.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Навигационные вкладки для удобства на телефонах и ПК -->
+      <div class="workspace-tabs">
+        <button class="ws-tab active" data-tab="myDossierTab">
+          🗂 Мое личное досье (5 карточек)
+        </button>
+        <button class="ws-tab" data-tab="boardTab">
+          👥 Дашборд всех участников (<span id="boardAliveCounter">0</span>)
+        </button>
+        <button class="ws-tab" data-tab="bunkerCrisisTab">
+          🏛 Досье Бункера и Понятия Урока
+        </button>
+      </div>
+
+      <!-- ВКЛАДКА 1: ЛИЧНЫЕ КАРТОЧКИ ИГРОКА -->
+      <div id="myDossierTab" class="ws-panel active">
+        <div class="dossier-header-strip">
+          <div>
+            <h3>ВАШ ПЕРСОНАЛЬНЫЙ ПАКЕТ КАРТОЧЕК</h3>
+            <p>Раскрывайте карточки по очереди во время своего выступления, чтобы убедить остальных оставить вас в бункере.</p>
+          </div>
+          <div id="myPlayerStatusPill" class="status-pill status-alive">В ИГРЕ // КАНДИДАТ</div>
+        </div>
+
+        <div id="myCardsContainer" class="my-cards-grid"></div>
+      </div>
+
+      <!-- ВКЛАДКА 2: ОБЩИЙ СТОЛ (ВСЕ УЧАСТНИКИ И ГОЛОСОВАНИЕ) -->
+      <div id="boardTab" class="ws-panel">
+        <div class="board-layout">
+          <div class="players-board-section">
+            <div class="section-subhead">
+              <span>СВОДНАЯ ТАБЛИЦА КАНДИДАТОВ И ОТКРЫТЫХ КАРТОЧЕК</span>
+              <span class="text-muted">Нажмите на игрока при голосовании или спецкарте</span>
+            </div>
+            <div id="allPlayersBoard" class="players-board-grid"></div>
+          </div>
+
+          <aside class="terminal-log-sidebar">
+            <div class="section-subhead">
+              <span>ЖУРНАЛ СОБЫТИЙ ТЕРМИНАЛА</span>
+            </div>
+            <div id="gameLogsList" class="game-logs-list"></div>
+          </aside>
+        </div>
+      </div>
+
+      <!-- ВКЛАДКА 3: ПАСПОРТ БУНКЕРА И ЭКОНОМИЧЕСКИЙ СПРАВОЧНИК УРОКА -->
+      <div id="bunkerCrisisTab" class="ws-panel">
+        <div class="bunker-detail-grid">
+          <div class="panel-card">
+            <span class="sys-tag text-amber">УСЛОВИЯ ЗАДАЧИ</span>
+            <h3 id="detailCrisisTitle">Кризис</h3>
+            <p id="detailCrisisDesc" class="crisis-desc"></p>
+            <div id="detailMacroGrid" class="macro-metrics-grid"></div>
+            <hr class="divider" />
+            <h4 id="detailBunkerName">Бункер</h4>
+            <p id="detailBunkerDuration" class="bunker-duration"></p>
+            <ul id="detailBunkerResources" class="bunker-resource-list"></ul>
+            <div id="detailBunkerObjective" class="bunker-objective-box"></div>
+          </div>
+
+          <div class="panel-card">
+            <span class="sys-tag text-emerald">ОБРАЗОВАТЕЛЬНЫЙ ТРЕКЕР УРОКА</span>
+            <h3>Раскрытые экономические концепции в этой партии</h3>
+            <p class="text-muted">Каждая открытая карточка иллюстрирует реальный термин из курса экономики:</p>
+            <div id="activeConceptsList" class="concepts-list"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- МОДАЛЬНОЕ ОКНО СМЕНЫ ИМЕНИ УЧАСТНИКА -->
+  <div id="nameModal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Изменить имя участника</h3>
+        <button id="closeNameModalBtn" class="btn-icon">✕</button>
+      </div>
+      <div class="modal-body">
+        <label for="newNameModalInput">НОВОЕ ИМЯ В РЕЕСТРЕ БУНКЕРА</label>
+        <input type="text" id="newNameModalInput" class="input-field" maxlength="28" placeholder="Введите ваше имя" />
+      </div>
+      <div class="modal-footer">
+        <button id="cancelNameModalBtn" class="btn btn-ghost">Отмена</button>
+        <button id="saveNameModalBtn" class="btn btn-primary">Сохранить имя</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- МОДАЛЬНОЕ ОКНО ВЫБОРА ЦЕЛИ ДЛЯ СПЕЦКАРТЫ -->
+  <div id="targetModal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Активация спецкарты инсайдера</h3>
+        <button id="closeTargetModalBtn" class="btn-icon">✕</button>
+      </div>
+      <div class="modal-body">
+        <p id="targetModalDesc" class="text-muted"></p>
+        <div id="targetPlayersList" class="target-players-list"></div>
+      </div>
+      <div class="modal-footer">
+        <button id="cancelTargetModalBtn" class="btn btn-ghost">Отмена</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Всплывающее уведомление (Toast) -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>
